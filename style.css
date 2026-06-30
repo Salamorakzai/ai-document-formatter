@@ -1,0 +1,183 @@
+/* =========================================================================
+   AI Document Formatter — custom stylesheet
+   Tailwind (via CDN) handles utility classes; this file holds:
+     1. Reusable component classes (form fields)
+     2. The "prose-doc" preview typography system (mirrors the .docx output)
+     3. Small interaction details (scrollbar, toast, print rules)
+   ========================================================================= */
+
+/* -------------------------------------------------------------------------
+   1. Form fields — shared style for inputs/selects in the metadata card
+   ------------------------------------------------------------------------- */
+.field {
+  width: 100%;
+  border: 1px solid rgba(11, 14, 26, 0.1);
+  border-radius: 0.65rem;
+  padding: 0.6rem 0.85rem;
+  font-size: 0.875rem;
+  color: #0b0e1a;
+  background: #fff;
+  outline: none;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.field:focus {
+  border-color: #6d5ef8;
+  box-shadow: 0 0 0 3px rgba(109, 94, 248, 0.15);
+}
+
+.field::placeholder {
+  color: rgba(11, 14, 26, 0.32);
+}
+
+/* -------------------------------------------------------------------------
+   2. Live preview typography ("prose-doc")
+   This mirrors, as closely as HTML/CSS can, the styles baked into the
+   generated .docx so what users see is what they get on export.
+   ------------------------------------------------------------------------- */
+.prose-doc {
+  font-family: "Inter", sans-serif;
+  color: #1a1d29;
+  font-size: 14.5px;
+  line-height: 1.75;
+}
+
+.prose-doc h1.doc-h1 {
+  font-family: "Sora", sans-serif;
+  font-weight: 700;
+  font-size: 1.5rem;
+  letter-spacing: -0.01em;
+  color: #0b0e1a;
+  margin: 1.6rem 0 0.7rem;
+  padding-bottom: 0.4rem;
+  border-bottom: 2px solid #6d5ef8;
+}
+
+.prose-doc h1.doc-h1:first-child {
+  margin-top: 0;
+}
+
+.prose-doc h2.doc-h2 {
+  font-family: "Sora", sans-serif;
+  font-weight: 600;
+  font-size: 1.18rem;
+  color: #11152a;
+  margin: 1.3rem 0 0.5rem;
+}
+
+.prose-doc p.doc-p {
+  margin: 0 0 0.85rem;
+  color: #2c2f3c;
+}
+
+.prose-doc ul.doc-ul,
+.prose-doc ol.doc-ol {
+  margin: 0 0 0.9rem;
+  padding-left: 1.4rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.prose-doc ul.doc-ul { list-style: disc; }
+.prose-doc ol.doc-ol { list-style: decimal; }
+
+.prose-doc strong { font-weight: 700; color: #0b0e1a; }
+.prose-doc em { font-style: italic; }
+
+.prose-doc pre.doc-code {
+  background: #11152a;
+  color: #d7d9f5;
+  font-family: "JetBrains Mono", monospace;
+  font-size: 0.78rem;
+  line-height: 1.6;
+  border-radius: 0.6rem;
+  padding: 0.9rem 1.1rem;
+  margin: 0 0 0.9rem;
+  overflow-x: auto;
+  white-space: pre;
+}
+
+.prose-doc table.doc-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 0 0 1rem;
+  font-size: 0.82rem;
+  overflow: hidden;
+  border-radius: 0.4rem;
+}
+
+.prose-doc table.doc-table th {
+  background: #6d5ef8;
+  color: #fff;
+  text-align: left;
+  font-weight: 600;
+  padding: 0.5rem 0.7rem;
+}
+
+.prose-doc table.doc-table td {
+  padding: 0.5rem 0.7rem;
+  border: 1px solid rgba(11, 14, 26, 0.08);
+}
+
+.prose-doc table.doc-table tr:nth-child(even) td {
+  background: #f7f7fb;
+}
+
+.prose-doc .doc-empty {
+  color: rgba(11, 14, 26, 0.35);
+  font-size: 0.85rem;
+  text-align: center;
+  padding: 3rem 0;
+}
+
+/* Cover page block inside the preview */
+#previewCover .cover-title {
+  font-family: "Sora", sans-serif;
+  font-weight: 800;
+  font-size: 1.7rem;
+  color: #0b0e1a;
+  letter-spacing: -0.015em;
+}
+
+#previewCover .cover-type {
+  display: inline-block;
+  margin-bottom: 0.85rem;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #6d5ef8;
+  background: rgba(109, 94, 248, 0.1);
+  padding: 0.3rem 0.7rem;
+  border-radius: 999px;
+}
+
+#previewCover .cover-meta {
+  margin-top: 0.9rem;
+  font-size: 0.8rem;
+  color: rgba(11, 14, 26, 0.55);
+}
+
+/* -------------------------------------------------------------------------
+   3. Small interaction details
+   ------------------------------------------------------------------------- */
+.scrollbar-thin::-webkit-scrollbar { width: 9px; }
+.scrollbar-thin::-webkit-scrollbar-track { background: transparent; }
+.scrollbar-thin::-webkit-scrollbar-thumb {
+  background: rgba(11, 14, 26, 0.15);
+  border-radius: 999px;
+}
+.scrollbar-thin::-webkit-scrollbar-thumb:hover {
+  background: rgba(11, 14, 26, 0.28);
+}
+
+#toast.show {
+  opacity: 1;
+  transform: translate(-50%, 0);
+}
+
+/* Respect users who'd rather not see motion */
+@media (prefers-reduced-motion: reduce) {
+  * { transition: none !important; animation: none !important; }
+}

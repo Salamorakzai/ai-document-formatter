@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>AI Document Formatter — Turn AI Answers into Polished Documents</title>
+<meta name="description" content="Paste any ChatGPT, Claude, Gemini, or DeepSeek response and export a polished Word or PDF document in seconds." />
+
+<!-- Google Fonts: Sora (display) + Inter (body/UI) + JetBrains Mono (code) -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+<!-- Tailwind CSS (CDN build, configured inline below) -->
+<script src="https://cdn.tailwindcss.com"></script>
+
+<!-- docx.js — generates real .docx files entirely client-side -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/docx/8.5.0/docx.umd.min.js"></script>
+<!-- FileSaver — triggers the browser download -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+<!-- html2pdf — renders the live preview into a paginated PDF -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+
+<!-- Project styles (custom utility layer + design tokens that go beyond Tailwind's defaults) -->
+<link rel="stylesheet" href="style.css" />
+
+<script>
+  // Extend Tailwind's default theme with this product's design tokens.
+  // Keeping this inline (rather than a build step) is what lets the whole
+  // app run as three static files with no bundler / backend.
+  tailwind.config = {
+    theme: {
+      extend: {
+        colors: {
+          ink: {
+            900: '#0B0E1A',
+            800: '#11152A',
+            700: '#171B36',
+          },
+          accent: {
+            DEFAULT: '#6D5EF8',
+            soft: '#A89BFF',
+            dim: '#2A2566',
+          },
+          teal: {
+            DEFAULT: '#19B6A4',
+          },
+          paper: '#FAFAF8',
+        },
+        fontFamily: {
+          display: ['Sora', 'sans-serif'],
+          body: ['Inter', 'sans-serif'],
+          mono: ['JetBrains Mono', 'monospace'],
+        },
+        boxShadow: {
+          glow: '0 0 0 1px rgba(109,94,248,0.15), 0 20px 60px -20px rgba(109,94,248,0.45)',
+          card: '0 1px 2px rgba(15,15,30,0.04), 0 12px 24px -12px rgba(15,15,30,0.10)',
+        },
+      },
+    },
+  };
+</script>
+</head>
+
+<body class="bg-paper font-body text-ink-900 antialiased">
+
+  <!-- ============================================================
+       NAVIGATION
+  ============================================================= -->
+  <header class="sticky top-0 z-50 border-b border-black/5 bg-paper/80 backdrop-blur-md">
+    <div class="mx-auto flex max-w-7xl items-center justify-between px-6 py-4 lg:px-10">
+      <a href="#top" class="flex items-center gap-2.5">
+        <span class="flex h-8 w-8 items-center justify-center rounded-lg bg-ink-900 text-white">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M4 4h11l5 5v11H4V4z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M14 4v5h5" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M8 13h8M8 16.5h5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+        </span>
+        <span class="font-display text-[15px] font-700 tracking-tight">AI Document Formatter</span>
+      </a>
+      <nav class="hidden items-center gap-8 text-sm font-medium text-ink-900/70 md:flex">
+        <a href="#how-it-works" class="hover:text-ink-900 transition-colors">How it works</a>
+        <a href="#formats" class="hover:text-ink-900 transition-colors">Document types</a>
+        <a href="#app" class="hover:text-ink-900 transition-colors">Open the app</a>
+      </nav>
+      <a href="#app" class="rounded-full bg-ink-900 px-4 py-2 text-sm font-semibold text-white shadow-card transition hover:bg-accent">
+        Start formatting →
+      </a>
+    </div>
+  </header>
+
+  <!-- ============================================================
+       HERO
+  ============================================================= -->
+  <section id="top" class="relative overflow-hidden bg-ink-900 text-white">
+    <!-- ambient gradient signature -->
+    <div class="pointer-events-none absolute inset-0 opacity-60" aria-hidden="true">
+      <div class="absolute -top-40 left-1/4 h-[32rem] w-[32rem] rounded-full bg-accent/30 blur-[120px]"></div>
+      <div class="absolute -bottom-40 right-1/4 h-[28rem] w-[28rem] rounded-full bg-teal/20 blur-[120px]"></div>
+    </div>
+
+    <div class="relative mx-auto grid max-w-7xl grid-cols-1 gap-14 px-6 py-20 lg:grid-cols-2 lg:px-10 lg:py-28">
+      <div class="flex flex-col justify-center">
+        <span class="mb-5 inline-flex w-fit items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs font-medium tracking-wide text-white/70">
+          <span class="h-1.5 w-1.5 rounded-full bg-teal"></span>
+          100% client-side · nothing leaves your browser
+        </span>
+        <h1 class="font-display text-4xl font-800 leading-[1.08] tracking-tight sm:text-5xl lg:text-[3.4rem]">
+          Raw AI output in.<br/>
+          <span class="bg-gradient-to-r from-accent-soft to-teal bg-clip-text text-transparent">A polished document</span> out.
+        </h1>
+        <p class="mt-6 max-w-lg text-base leading-relaxed text-white/65 sm:text-lg">
+          Paste any response from ChatGPT, Claude, Gemini, or DeepSeek. AI Document Formatter detects headings,
+          lists, tables, and code — then builds a real, downloadable Word or PDF document with a cover page,
+          table of contents, and professional styling.
+        </p>
+        <div class="mt-9 flex flex-wrap items-center gap-4">
+          <a href="#app" class="rounded-full bg-white px-6 py-3 text-sm font-semibold text-ink-900 shadow-glow transition hover:-translate-y-0.5">
+            Open the formatter
+          </a>
+          <a href="#how-it-works" class="text-sm font-semibold text-white/70 transition hover:text-white">
+            See how detection works ↓
+          </a>
+        </div>
+        <div class="mt-12 flex items-center gap-8 text-white/40">
+          <span class="text-xs uppercase tracking-widest">Works with</span>
+          <div class="flex items-center gap-5 text-sm font-medium text-white/70">
+            <span>ChatGPT</span><span>Claude</span><span>Gemini</span><span>DeepSeek</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Signature visual: raw text "morphing" into a structured document -->
+      <div class="relative flex items-center justify-center">
+        <div class="grid w-full max-w-md grid-cols-1 gap-4 rounded-2xl border border-white/10 bg-white/[0.04] p-5 shadow-2xl backdrop-blur">
+          <div class="flex items-center gap-1.5 px-1">
+            <span class="h-2.5 w-2.5 rounded-full bg-white/20"></span>
+            <span class="h-2.5 w-2.5 rounded-full bg-white/20"></span>
+            <span class="h-2.5 w-2.5 rounded-full bg-white/20"></span>
+            <span class="ml-2 font-mono text-[11px] text-white/35">pasted-response.txt</span>
+          </div>
+          <pre class="overflow-hidden rounded-lg bg-ink-800 p-4 font-mono text-[11px] leading-relaxed text-white/50"># Quarterly Risk Review
+**Summary:** risk levels *decreased* 12%
+- Audit completed
+- 3 findings closed
+| Area | Status |
+|---|---|
+| QA | Pass |</pre>
+          <div class="flex items-center justify-center text-accent-soft">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M12 4v16m0 0l-6-6m6 6l6-6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </div>
+          <div class="rounded-lg bg-white p-4 text-ink-900 shadow-inner">
+            <p class="font-display text-[13px] font-700">Quarterly Risk Review</p>
+            <p class="mt-1 text-[11px] text-ink-900/60">Summary: risk levels <em>decreased</em> 12%</p>
+            <ul class="mt-2 list-disc pl-4 text-[11px] text-ink-900/70">
+              <li>Audit completed</li>
+              <li>3 findings closed</li>
+            </ul>
+            <div class="mt-2 overflow-hidden rounded border border-black/10 text-[10px]">
+              <div class="flex bg-accent text-white"><span class="flex-1 px-2 py-1 font-semibold">Area</span><span class="flex-1 px-2 py-1 font-semibold">Status</span></div>
+              <div class="flex"><span class="flex-1 px-2 py-1">QA</span><span class="flex-1 px-2 py-1">Pass</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       HOW IT WORKS
+  ============================================================= -->
+  <section id="how-it-works" class="mx-auto max-w-7xl px-6 py-20 lg:px-10">
+    <div class="mb-12 max-w-2xl">
+      <span class="text-xs font-semibold uppercase tracking-widest text-accent">The pipeline</span>
+      <h2 class="mt-3 font-display text-3xl font-700 tracking-tight text-ink-900 sm:text-4xl">
+        Three steps. No backend required.
+      </h2>
+    </div>
+    <div class="grid grid-cols-1 gap-6 md:grid-cols-3">
+      <div class="rounded-2xl border border-black/5 bg-white p-7 shadow-card">
+        <div class="mb-5 flex h-10 w-10 items-center justify-center rounded-full bg-ink-900 font-display text-sm font-700 text-white">1</div>
+        <h3 class="font-display text-lg font-700">Paste & describe</h3>
+        <p class="mt-2 text-sm leading-relaxed text-ink-900/60">Drop in the AI response, then set the title, author, company, and document type so the export matches its purpose.</p>
+      </div>
+      <div class="rounded-2xl border border-black/5 bg-white p-7 shadow-card">
+        <div class="mb-5 flex h-10 w-10 items-center justify-center rounded-full bg-ink-900 font-display text-sm font-700 text-white">2</div>
+        <h3 class="font-display text-lg font-700">Auto-detect structure</h3>
+        <p class="mt-2 text-sm leading-relaxed text-ink-900/60">Headings, bullet & numbered lists, tables, bold/italic emphasis, and code blocks are parsed live as you type.</p>
+      </div>
+      <div class="rounded-2xl border border-black/5 bg-white p-7 shadow-card">
+        <div class="mb-5 flex h-10 w-10 items-center justify-center rounded-full bg-ink-900 font-display text-sm font-700 text-white">3</div>
+        <h3 class="font-display text-lg font-700">Export Word or PDF</h3>
+        <p class="mt-2 text-sm leading-relaxed text-ink-900/60">Download a real .docx with a cover page, TOC, headers/footers and page numbers — or a matching PDF.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       DOCUMENT TYPES STRIP
+  ============================================================= -->
+  <section id="formats" class="border-y border-black/5 bg-ink-800 py-14 text-white">
+    <div class="mx-auto max-w-7xl px-6 lg:px-10">
+      <h2 class="mb-8 font-display text-xl font-700">Built for the documents you actually produce</h2>
+      <div class="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
+        <div class="rounded-xl border border-white/10 bg-white/[0.03] px-4 py-5 text-center text-sm font-medium text-white/80">Report</div>
+        <div class="rounded-xl border border-white/10 bg-white/[0.03] px-4 py-5 text-center text-sm font-medium text-white/80">SOP</div>
+        <div class="rounded-xl border border-white/10 bg-white/[0.03] px-4 py-5 text-center text-sm font-medium text-white/80">QC Training Manual</div>
+        <div class="rounded-xl border border-white/10 bg-white/[0.03] px-4 py-5 text-center text-sm font-medium text-white/80">Research Paper</div>
+        <div class="rounded-xl border border-white/10 bg-white/[0.03] px-4 py-5 text-center text-sm font-medium text-white/80">Assignment</div>
+        <div class="rounded-xl border border-white/10 bg-white/[0.03] px-4 py-5 text-center text-sm font-medium text-white/80">Meeting Minutes</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       APP — the actual formatter tool
+  ============================================================= -->
+  <section id="app" class="mx-auto max-w-7xl px-6 py-20 lg:px-10">
+    <div class="mb-10 max-w-2xl">
+      <span class="text-xs font-semibold uppercase tracking-widest text-accent">The formatter</span>
+      <h2 class="mt-3 font-display text-3xl font-700 tracking-tight sm:text-4xl">Paste, preview, export.</h2>
+      <p class="mt-3 text-sm text-ink-900/60">Everything below runs locally in this tab — your text and documents are never uploaded anywhere.</p>
+    </div>
+
+    <div class="grid grid-cols-1 gap-6 lg:grid-cols-12">
+
+      <!-- ---------- LEFT: Document metadata + editor ---------- -->
+      <div class="flex flex-col gap-6 lg:col-span-5">
+
+        <!-- Metadata card -->
+        <div class="rounded-2xl border border-black/5 bg-white p-6 shadow-card">
+          <h3 class="mb-4 font-display text-sm font-700 uppercase tracking-wide text-ink-900/50">Document details</h3>
+          <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <label class="flex flex-col gap-1.5 text-sm">
+              <span class="font-medium text-ink-900/70">Document title</span>
+              <input id="docTitle" type="text" placeholder="e.g. Standard Cleaning Procedure" class="field" />
+            </label>
+            <label class="flex flex-col gap-1.5 text-sm">
+              <span class="font-medium text-ink-900/70">Author</span>
+              <input id="docAuthor" type="text" placeholder="e.g. Jane Doe" class="field" />
+            </label>
+            <label class="flex flex-col gap-1.5 text-sm">
+              <span class="font-medium text-ink-900/70">Company name</span>
+              <input id="docCompany" type="text" placeholder="e.g. Acme Labs Inc." class="field" />
+            </label>
+            <label class="flex flex-col gap-1.5 text-sm">
+              <span class="font-medium text-ink-900/70">Document type</span>
+              <select id="docType" class="field">
+                <option value="Report">Report</option>
+                <option value="SOP">SOP</option>
+                <option value="QC Training Manual">QC Training Manual</option>
+                <option value="Research Paper">Research Paper</option>
+                <option value="Assignment">Assignment</option>
+                <option value="Meeting Minutes">Meeting Minutes</option>
+              </select>
+            </label>
+          </div>
+        </div>
+
+        <!-- Editor card -->
+        <div class="flex flex-1 flex-col rounded-2xl border border-black/5 bg-white shadow-card">
+          <div class="flex items-center justify-between border-b border-black/5 px-6 py-4">
+            <h3 class="font-display text-sm font-700 uppercase tracking-wide text-ink-900/50">Paste your AI response</h3>
+            <div class="flex items-center gap-3">
+              <span id="wordCount" class="text-xs text-ink-900/40">0 words</span>
+              <button id="loadSampleBtn" type="button" class="rounded-full border border-black/10 px-3 py-1.5 text-xs font-semibold text-ink-900/70 transition hover:border-accent hover:text-accent">
+                Load sample
+              </button>
+            </div>
+          </div>
+          <textarea id="editor" class="h-[420px] flex-1 resize-none rounded-b-2xl px-6 py-5 font-mono text-[13px] leading-relaxed text-ink-900 outline-none placeholder:text-ink-900/30" placeholder="# Paste a heading, paragraphs, **bold**, *italic*, - bullet lists, 1. numbered lists, | tables |, and ```code blocks``` ..."></textarea>
+        </div>
+      </div>
+
+      <!-- ---------- RIGHT: Live preview + export ---------- -->
+      <div class="flex flex-col gap-6 lg:col-span-7">
+
+        <!-- Export bar -->
+        <div class="flex flex-col items-stretch justify-between gap-4 rounded-2xl border border-black/5 bg-white p-5 shadow-card sm:flex-row sm:items-center">
+          <div class="flex items-center gap-2 text-sm text-ink-900/60">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" class="text-teal shrink-0"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.6"/><path d="M8.5 12.5l2.2 2.2 4.8-5.4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            <span id="detectionSummary">Start typing to detect document structure</span>
+          </div>
+          <div class="flex gap-3">
+            <button id="exportPdfBtn" type="button" class="flex items-center gap-2 rounded-full border border-black/10 px-5 py-2.5 text-sm font-semibold text-ink-900 transition hover:border-ink-900">
+              Export PDF
+            </button>
+            <button id="exportDocxBtn" type="button" class="flex items-center gap-2 rounded-full bg-ink-900 px-5 py-2.5 text-sm font-semibold text-white shadow-card transition hover:bg-accent">
+              Export Word (.docx)
+            </button>
+          </div>
+        </div>
+
+        <!-- Live preview -->
+        <div class="flex flex-1 flex-col overflow-hidden rounded-2xl border border-black/5 bg-white shadow-card">
+          <div class="flex items-center justify-between border-b border-black/5 px-6 py-4">
+            <h3 class="font-display text-sm font-700 uppercase tracking-wide text-ink-900/50">Live preview</h3>
+            <span class="rounded-full bg-accent/10 px-3 py-1 text-[11px] font-semibold text-accent" id="docTypeBadge">Report</span>
+          </div>
+          <div class="scrollbar-thin h-[640px] overflow-y-auto bg-[#EEF0F4] p-6">
+            <!-- This inner sheet is what gets captured for the PDF export -->
+            <div id="previewSheet" class="mx-auto w-full max-w-[680px] rounded-sm bg-white px-12 py-14 shadow-xl">
+              <div id="previewCover" class="mb-10 border-b border-black/10 pb-8 text-center"></div>
+              <div id="previewBody" class="prose-doc"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       FOOTER
+  ============================================================= -->
+  <footer class="border-t border-black/5 bg-white py-10">
+    <div class="mx-auto flex max-w-7xl flex-col items-center justify-between gap-4 px-6 text-sm text-ink-900/50 sm:flex-row lg:px-10">
+      <span>© 2026 AI Document Formatter. Runs entirely in your browser.</span>
+      <span class="flex items-center gap-4">
+        <span>No sign-up</span><span>No uploads</span><span>No tracking</span>
+      </span>
+    </div>
+  </footer>
+
+  <!-- Toast for export feedback -->
+  <div id="toast" class="pointer-events-none fixed bottom-6 left-1/2 z-[100] -translate-x-1/2 translate-y-4 rounded-full bg-ink-900 px-5 py-2.5 text-sm font-medium text-white opacity-0 shadow-xl transition-all duration-300"></div>
+
+  <script src="script.js"></script>
+</body>
+</html>
